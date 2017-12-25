@@ -38,9 +38,21 @@ def sigmoid_to_derivative(output):
 
 
 # Train the Artificial Neural Network.
-def train(X, y, hidden_neurons=10, alpha=1, epochs=50000):
+def train(X, y, hidden_neurons=30, alpha=0.01, epochs=1000000):
     print ("Training with {0} neurons, alpha: {1}".format(hidden_neurons, str(alpha)))
     print ("Input matrix: {}x{}    Output matrix: {}x{}".format(len(X),len(X[0]),1, len(classes)))
+
+    # Write number of sentences and words.
+    record = {
+                "sentences": len(X),
+                "words": len(X[0])
+             }
+    with open('log.json', 'w') as f:
+        json.dump(record, f, indent=4)
+    print(len(documents), 'documents')
+    print(len(classes), 'classes')
+    print(len(words), 'words')
+
     np.random.seed(1)
 
     last_mean_error = 1
@@ -65,10 +77,10 @@ def train(X, y, hidden_neurons=10, alpha=1, epochs=50000):
 
         if (j% 10000) == 0 and j > 5000:
             if np.mean(np.abs(layer_2_error)) < last_mean_error:
-                print ("delta after "+str(j)+" iterations:" + str(np.mean(np.abs(layer_2_error))) )
+                print ("Delta after "+str(j)+" iterations: " + str(np.mean(np.abs(layer_2_error))) )
                 last_mean_error = np.mean(np.abs(layer_2_error))
             else:
-                print ("break:", np.mean(np.abs(layer_2_error)), ">", last_mean_error )
+                print ("Break: ", np.mean(np.abs(layer_2_error)), ">", last_mean_error )
                 break
 
         layer_2_delta = layer_2_error * sigmoid_to_derivative(layer_2)
@@ -119,10 +131,6 @@ def prepare_data():
 
     words = list(set([ stemmer.stem(w.lower()) for w in words if w not in ignore_words ]))
 
-    print(len(documents), 'documents')
-    print(len(classes), 'classes')
-    print(len(words), 'words')
-
     # Creating training data using one hot encoding method.
     # Creating bag of words for each sentence.
     for doc in documents:
@@ -136,8 +144,8 @@ def prepare_data():
         output_row[classes.index(doc[1])] = 1
         output.append(output_row)
 
-    print(documents[0][0], ' --> ', training[0])
-    print(documents[0][1], ' --> ', output[0])
+    #print(documents[6][0], ' --> ', training[6])
+    #print(documents[6][1], ' --> ', output[6])
     return training, output
 
 
@@ -164,41 +172,60 @@ def predict(sentence):
         synapse = json.load(data_file)
         synapse_0 = np.asarray(synapse['synapse0'])
         synapse_1 = np.asarray(synapse['synapse1'])
+        classes = np.asarray(synapse['classes'])
+        words = np.asarray(synapse['words'])
     x = bag_of_words(sentence, words)
 
     # Defining layers for prediction.
     l0 = x
     l1 = sigmoid(np.dot(l0, synapse_0))
     l2 = sigmoid(np.dot(l1, synapse_1))
-    return l2
+    return l2, classes
 
 
 def classify(sentence):
-    ERROR_THRESHOLD = 0.2
-    results = predict(sentence)
+    ERROR_THRESHOLD = 0.25
+    results, classes = predict(sentence)
 
-    results = [[i,r] for i,r in enumerate(results) if r>ERROR_THRESHOLD ]
+    results = [[i,r] for i,r in enumerate(results) if r > ERROR_THRESHOLD ]
     results.sort(key=lambda x: x[1], reverse=True)
     return_results =[[classes[r[0]],r[1]] for r in results]
-    print("Sentence: {}, Classification: {}".format(sentence, return_results))
+    #print("Sentence: {}, Classification: {}".format(sentence, return_results))
     return return_results
 
 
+def change_in_data(_sentences, _words):
+    try:
+        with open('log.json', 'r') as f:
+            log = json.load(f)
+        if _sentences != int(log["sentences"]) or _words != int(log["words"]):
+            return True
+        return False
+    except FileNotFoundError:
+        return True
+
+
 if __name__ == '__main__':
+
     # Preparing data.
     X, y = prepare_data()
     X = np.array(training)
     y = np.array(output)
 
-    # Training the ANN.
-    start_time = time.time()
-    train(X, y, hidden_neurons=20, alpha=0.1, epochs=100000)
-    elapsed_time = time.time() - start_time
-    print ("Training time:", elapsed_time, "seconds")
+    if(change_in_data(len(X), len(X[0]))):
+        # Training the ANN.
+        start_time = time.time()
+        train(X, y, hidden_neurons=40, alpha=0.1, epochs=1000000)
+        elapsed_time = time.time() - start_time
+        print ("Training time:", elapsed_time, "seconds")
 
-    # Classifying new sentence.
-    class_ = classify("Hi buddy...")[0][0]
+    while True:
+        # Classifying new sentence.
+        _input = input('You: ')
+        class_ = classify(_input)[0][0]
 
-    for _class in training_data:
-        if _class["class"] == class_:
-            print(random.choice(_class["responses"]))
+        for _class in training_data:
+            if _class["class"] == class_:
+                print("Bot: " + random.choice(_class["responses"]))
+                if _class["class"].strip() == 'goodbye':
+                    break
