@@ -1,15 +1,18 @@
 {"data": [
         {
           "class": "greeting",
-          "sentences": ["How are you?", "How is your day?", "Good day", "Hi", "How is it going today?"]
+          "sentences": ["How are you?", "How is your day?", "Good day", "Hi", "How is it going today?"],
+          "responses": ["Hi pal, going good."]
         },
         {
           "class": "goodbye",
-          "sentences": ["Bye, have a nice day", "See you later", "Bye, talk to you soon", "Catch you later"]
+          "sentences": ["Bye, have a nice day", "See you later", "Bye, talk to you soon", "Catch you later"],
+          "responses": ["Bye, have a great day ahead.."]
         },
         {
           "class": "sandwich",
-          "sentences": ["Make me a sandwich", "Can you make a sandwich?", "Having a sandwich today?", "What's for lunch?"]
+          "sentences": ["Make me a sandwich", "Can you make a sandwich?", "Having a sandwich today?", "What's for lunch?"],
+          "responses": ["Yea, I will make a sandwich for you pal.."]
         }
    ]
 }
