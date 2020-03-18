@@ -1,3 +1,3 @@
-# ANN-Chatbot
+# ANN Chatbot
 
-A simple Retrieval model based chatbot which uses the concept of Text Classification implemented by building our own Feed Forward Artificial Neural Network without Tensorflow.
+A simple retrieval model-based chatbot implemented using a feed-forward artificial neural network. This chatbot identifies the intent of the text using text classification technique.
